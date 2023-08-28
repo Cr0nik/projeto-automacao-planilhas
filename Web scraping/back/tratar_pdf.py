@@ -9,62 +9,34 @@ mes_mg = mes - 1
 mes_pi = mes - 2
 
 # Caminho para o arquivo PDF
-for i in range(0, 12):
-    if i == 0:
-        pdf_path = f'C:\\Users\\rafael.fajardo\\Downloads\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Publicado].pdf'    
-        # Abrir o PDF com pdfplumber
-        with pdfplumber.open(pdf_path) as pdf:
-            # Extrair tabelas de todas as páginas
-            all_tables = []
-            for page in pdf.pages:
-                tables = page.extract_tables()
-                all_tables.extend(tables)
+for i in range(1, 13):
+    pdf_path = f'C:\\Users\\rafael.fajardo\\Downloads\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Publicado] ({i}).pdf'    
+    # Abrir o PDF com pdfplumber
+    with pdfplumber.open(pdf_path) as pdf:
+        # Extrair tabelas de todas as páginas
+        all_tables = []
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            all_tables.extend(tables)
 
-        # Converter as tabelas em um DataFrame do pandas
-        dfs = []
-        for table in all_tables:
-            df = pd.DataFrame(table[1:], columns=table[0])
-            dfs.append(df)
+    # Converter as tabelas em um DataFrame do pandas
+    dfs = []
+    for table in all_tables:
+        df = pd.DataFrame(table[1:], columns=table[0])
+        dfs.append(df)
 
-        # Criar um arquivo Excel com as tabelas
-        excel_path = f'C:\\Users\\rafael.fajardo\\Desktop\\Planilhas CUB/arquivo.xlsx'
-        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            for idx, df in enumerate(dfs):
-                df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
+    # Criar um arquivo Excel com as tabelas
+    excel_path = f'C:\\Users\\rafael.fajardo\\Desktop\\Planilhas CUB/arquivo.xlsx'
+    with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+        for idx, df in enumerate(dfs):
+            df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
 
-        print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')
-        
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
-        print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
-    else:
-        pdf_path = f'C:\\Users\\rafael.fajardo\\Downloads\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Publicado].pdf'    
-        # Abrir o PDF com pdfplumber
-        with pdfplumber.open(pdf_path) as pdf:
-            # Extrair tabelas de todas as páginas
-            all_tables = []
-            for page in pdf.pages:
-                tables = page.extract_tables()
-                all_tables.extend(tables)
-
-        # Converter as tabelas em um DataFrame do pandas
-        dfs = []
-        for table in all_tables:
-            df = pd.DataFrame(table[1:], columns=table[0])
-            dfs.append(df)
-
-        # Criar um arquivo Excel com as tabelas
-        excel_path = f'C:\\Users\\rafael.fajardo\\Desktop\\Planilhas CUB/arquivo({i}).xlsx'
-        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            for idx, df in enumerate(dfs):
-                df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
-
-        print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')
-        
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
-        print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
+    print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')
     
+    if os.path.exists(pdf_path):
+        os.remove(pdf_path)
+    print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
+
 
 #MINAS GERAIS
 
