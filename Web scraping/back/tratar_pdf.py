@@ -9,7 +9,7 @@ mes_mg = mes - 1
 mes_pi = mes - 2
 
 # Caminho para o arquivo PDF
-for i in range(0, 12):
+for i in range(0, 13):
     if i == 0:
         pdf_path = f'C:\\Users\\rafael.fajardo\\Downloads\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Publicado].pdf'    
         # Abrir o PDF com pdfplumber
