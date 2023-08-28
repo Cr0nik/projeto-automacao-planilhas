@@ -2,10 +2,10 @@ import pandas as pd
 import os
 
 # Pasta onde os arquivos estão localizados
-input_folder = 'C:\\Users\\rafael.fajardo\\Desktop\\Planilhas CUB'
+input_folder = input("Digite o caminho que os donwloads foram feitos (com DUAS barras invertidas \\) EXEMPLO: C:\\Users\\rafael.fajardo\\Desktop\\Planilhas CUB")
 
 # Pasta onde o arquivo combinado será salvo
-output_folder = 'C:\\Users\\rafael.fajardo\\Desktop\\Planilha tratada'
+output_folder = input("Digite o caminho que os donwloads foram feitos (com DUAS barras invertidas \\) EXEMPLO: C:\\Users\\rafael.fajardo\\Desktop\\Planilha tratada")
 
 # Lista para armazenar os DataFrames de cada arquivo
 data_frames = []
