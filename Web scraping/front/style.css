@@ -186,7 +186,6 @@ a.button-anchor {
     background: #009959;
     transition: 0.1s;
     text-decoration: none;
-    /* Remover sublinhado padrão de links */
 }
 
 a.button-anchor::after {
