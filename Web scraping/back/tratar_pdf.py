@@ -1,160 +1,76 @@
+import tkinter as tk
+from tkinter import filedialog
 import pdfplumber
 import pandas as pd
-import os 
+import os
 
+def select_output_folder():
+    global excel_folder
+    excel_folder = filedialog.askdirectory()
+    output_label.config(text="Pasta de saída selecionada: " + excel_folder)
 
-mes = int(input("Digite o mês da tabela:"))
-ano = int(input("Digite o ano da tabela:"))
-pasta = input("Digite o caminho que os donwloads foram feitos (com DUAS barras invertidas \\) EXEMPLO: C:\\Users\\rafael.fajardo\\Downloads.")
-pasta_para_excel = input("Digite o caminho que os donwloads foram feitos (com DUAS barras invertidas \\) EXEMPLO: C:\\Users\\rafael.fajardo\\Desktop\\Planilhas CUB")
-mes_mg = mes - 1
-mes_pi = mes - 2
+def select_pdf_paths():
+    global pdf_paths
+    pdf_paths = list(filedialog.askopenfilenames(filetypes=[("Arquivos PDF", "*.pdf")]))
+    pdf_label.config(text="PDFs selecionados: " + ", ".join(pdf_paths))
+    process_pdfs()
 
-# Caminho para o arquivo PDF
-for i in range(0, 13):
-    if i == 0:
-        pdf_path = f'{pasta}\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Publicado].pdf'    
-        # Abrir o PDF com pdfplumber
-        with pdfplumber.open(pdf_path) as pdf:
-            # Extrair tabelas de todas as páginas
-            all_tables = []
-            for page in pdf.pages:
-                tables = page.extract_tables()
-                all_tables.extend(tables)
+def process_pdfs():
+    global pdf_paths, excel_folder
 
-        # Converter as tabelas em um DataFrame do pandas
-        dfs = []
-        for table in all_tables:
-            df = pd.DataFrame(table[1:], columns=table[0])
-            dfs.append(df)
+    if pdf_paths and excel_folder:
+        for pdf_path in pdf_paths:
+            # Abrir o PDF com pdfplumber
+            with pdfplumber.open(pdf_path) as pdf:
+                # Extrair tabelas de todas as páginas
+                all_tables = []
+                for page in pdf.pages:
+                    tables = page.extract_tables()
+                    all_tables.extend(tables)
 
-        # Criar um arquivo Excel com as tabelas
-        excel_path = f'{pasta_para_excel}/arquivo.xlsx'
-        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            for idx, df in enumerate(dfs):
-                df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
+            # Converter as tabelas em um DataFrame do pandas
+            dfs = []
+            for table in all_tables:
+                df = pd.DataFrame(table[1:], columns=table[0])
+                dfs.append(df)
 
-        print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')
+            # Criar um arquivo Excel com as tabelas
+            pdf_filename = os.path.basename(pdf_path)  # Nome do arquivo PDF sem o caminho
+            pdf_filename_without_extension = os.path.splitext(pdf_filename)[0]  # Nome do arquivo sem a extensão
+            excel_path = os.path.join(excel_folder, f'{pdf_filename_without_extension}.xlsx')
+            with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+                for idx, df in enumerate(dfs):
+                    df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
+
+            print(f'Tabelas do arquivo {pdf_filename} extraídas e salvas no arquivo Excel com sucesso!')
+
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+                print(f'O arquivo {pdf_filename} foi excluído para evitar conflitos em outras operações.')
+
+        pdf_paths.clear()  # Limpar a lista de PDFs após processamento
+        pdf_label.config(text="Nenhum PDF selecionado")
         
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
-        print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
+        root.destroy()  # Fechar a janela após processamento
+
     else:
-        pdf_path = f'{pasta}\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Publicado] ({i}).pdf'    
-        # Abrir o PDF com pdfplumber
-        with pdfplumber.open(pdf_path) as pdf:
-            # Extrair tabelas de todas as páginas
-            all_tables = []
-            for page in pdf.pages:
-                tables = page.extract_tables()
-                all_tables.extend(tables)
+        print("Selecione pelo menos um arquivo PDF e uma pasta de saída primeiro!")
 
-        # Converter as tabelas em um DataFrame do pandas
-        dfs = []
-        for table in all_tables:
-            df = pd.DataFrame(table[1:], columns=table[0])
-            dfs.append(df)
+root = tk.Tk()
+root.title("Processamento de PDFs")
 
-        # Criar um arquivo Excel com as tabelas
-        excel_path = f'{pasta_para_excel}/arquivo({i}).xlsx'
-        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            for idx, df in enumerate(dfs):
-                df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
+pdf_paths = []
+excel_folder = ""
+pdf_label = tk.Label(root, text="Nenhum PDF selecionado")
+output_label = tk.Label(root, text="Nenhuma pasta de saída selecionada")
+select_pdf_button = tk.Button(root, text="Selecionar PDFs", command=select_pdf_paths)
+select_output_button = tk.Button(root, text="Selecionar Pasta de Saída", command=select_output_folder)
+process_button = tk.Button(root, text="Processar PDFs", command=process_pdfs)
 
-        print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')
-        
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
-        print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
-    
+pdf_label.pack(pady=10)
+select_pdf_button.pack()
+output_label.pack()
+select_output_button.pack()
+process_button.pack()
 
-#MINAS GERAIS
-
-pdf_path = f'{pasta}\\Downloads\\{ano}-{mes_mg}-Tabela-CUB-m2-valores-em-reais[Publicado].pdf'
-
-# Abrir o PDF com pdfplumber
-with pdfplumber.open(pdf_path) as pdf:
-    # Extrair tabelas de todas as páginas
-    all_tables = []
-    for page in pdf.pages:
-        tables = page.extract_tables()
-        all_tables.extend(tables)
-
-# Converter as tabelas em um DataFrame do pandas
-dfs = []
-for table in all_tables:
-    df = pd.DataFrame(table[1:], columns=table[0])
-    dfs.append(df)
-
-# Criar um arquivo Excel com as tabelas
-excel_path = f'{pasta_para_excel}/arquivo(MG).xlsx'
-with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-    for idx, df in enumerate(dfs):
-        df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
-
-print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')  
-
-if os.path.exists(pdf_path):
-        os.remove(pdf_path)
-print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
-
-
-#PIAUÍ
-
-pdf_path = f'{pasta}\\Downloads\\{ano}-{mes_pi}-Tabela-CUB-m2-valores-em-reais[Publicado].pdf'
-
-# Abrir o PDF com pdfplumber
-with pdfplumber.open(pdf_path) as pdf:
-    # Extrair tabelas de todas as páginas
-    all_tables = []
-    for page in pdf.pages:
-        tables = page.extract_tables()
-        all_tables.extend(tables)
-
-# Converter as tabelas em um DataFrame do pandas
-dfs = []
-for table in all_tables:
-    df = pd.DataFrame(table[1:], columns=table[0])
-    dfs.append(df)
-
-# Criar um arquivo Excel com as tabelas
-excel_path = f'{pasta_para_excel}/arquivo(PI).xlsx'
-with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-    for idx, df in enumerate(dfs):
-        df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
-
-    print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')
-if os.path.exists(pdf_path):
-        os.remove(pdf_path)
-print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')  
-    
-    
-#NÃO ENVIADO
-
-# Abrir o PDF com pdfplumber
-pdf_path = f'{pasta}\\Downloads\\{ano}-{mes}-Tabela-CUB-m2-valores-em-reais[Não enviado].pdf'
-
-with pdfplumber.open(pdf_path) as pdf:
-    # Extrair tabelas de todas as páginas
-    all_tables = []
-    for page in pdf.pages:
-        tables = page.extract_tables()
-        all_tables.extend(tables)
-
-# Converter as tabelas em um DataFrame do pandas
-dfs = []
-for table in all_tables:
-    df = pd.DataFrame(table[1:], columns=table[0])
-    dfs.append(df)
-
-# Criar um arquivo Excel com as tabelas
-excel_path = f'{pasta_para_excel}/arquivo(NE).xlsx'
-with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-    for idx, df in enumerate(dfs):
-        df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
-
-print('Tabelas extraídas e salvas no arquivo Excel com sucesso!')  
-
-if os.path.exists(pdf_path):
-        os.remove(pdf_path)
-print('Os arquivo pdf foi excluido para não ocorrer conflito em outras operações.')
+root.mainloop()
