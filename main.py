@@ -226,9 +226,9 @@ def process_excel_files():
                 file_path = os.path.join(input_folder, filename)
                 try:
                     df_table_1 = pd.read_excel(file_path, sheet_name='Tabela_1')
-                    df_table_3 = pd.read_excel(file_path, sheet_name='Tabela_3')
+                    df_table_2 = pd.read_excel(file_path, sheet_name='Tabela_2')
 
-                    combined_df = pd.concat([df_table_1, df_table_3], ignore_index=True)
+                    combined_df = pd.concat([df_table_1, df_table_2], ignore_index=True)
                     data_frames.append(combined_df)
                 except:
                     pass
