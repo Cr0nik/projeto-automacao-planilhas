@@ -9,17 +9,16 @@ import pandas as pd
 import os
 import pdfplumber
 
-
+#Lista de todos os estados que nao tem alteração
 estados = ['AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'PB', 'PE', 'RN', 'RJ', 'SC']
 
-
+#Obtem o valor do mês que o usuário quer
 def obter_valor(valor_mes_entry, janela):
     valor_mes = int(valor_mes_entry.get())
     if 1 <= valor_mes <= 12:
         janela.quit()
-    else:
-        resultado_label.config(text="Por favor, escolha um valor entre 1 e 12.")
 
+#Abre a janela do TKinter
 def escolher_valor():
     janela = tk.Tk()
     janela.title("Escolha um valor de 1 a 12")
@@ -42,11 +41,11 @@ def escolher_valor():
 
     return int(valor_mes_entry.get())
 
-
+#Define o valor do mês
 valor_mes = escolher_valor()
 print(f"O valor escolhido foi: {valor_mes}")
 
-
+#Estado com alteração no sinduscon
 driver = webdriver.Chrome()
 url = f'http://www.cub.org.br/cub-m2-estadual/PR/'
 driver.get(url)
@@ -70,7 +69,31 @@ try:
 finally:
         driver.quit()
 
+#Estado com alteração na seleção do mês e do sinduscon
+driver = webdriver.Chrome()
+url = f'http://www.cub.org.br/cub-m2-estadual/MG/'
+driver.get(url)
+try:
+    select_element = driver.find_element(By.ID, "mes")  
+    select = Select(select_element)
+    value_to_select = f"{valor_mes - 2}" 
+    select.select_by_value(value_to_select)
+    
+    select_element = driver.find_element(By.ID, "sinduscon")  
+    select = Select(select_element)
+    select.select_by_value("1")
+    
 
+
+    button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
+    button.click()
+    
+    time.sleep(1)
+
+finally:
+        driver.quit()
+
+#Estado com alteração na escolha do mês
 driver = webdriver.Chrome()
 url = f'http://www.cub.org.br/cub-m2-estadual/PI/'
 driver.get(url)
@@ -89,7 +112,7 @@ try:
 finally:
         driver.quit()
 
-
+#Loop para o codigo fazer o download de cada estado sem alteração
 for estado in estados:
 
     driver = webdriver.Chrome()
@@ -113,12 +136,7 @@ for estado in estados:
     finally:
             driver.quit()
 
-import tkinter as tk
-from tkinter import filedialog
-import pdfplumber
-import pandas as pd
-import os
-
+#O usuario seleciona os pdfs que ele deseja fazer o tratamento, e a pasta de saida
 def select_output_folder():
     global excel_folder
     excel_folder = filedialog.askdirectory()
@@ -135,23 +153,19 @@ def process_pdfs():
 
     if pdf_paths and excel_folder:
         for pdf_path in pdf_paths:
-            # Abrir o PDF com pdfplumber
             with pdfplumber.open(pdf_path) as pdf:
-                # Extrair tabelas de todas as páginas
                 all_tables = []
                 for page in pdf.pages:
                     tables = page.extract_tables()
                     all_tables.extend(tables)
 
-            # Converter as tabelas em um DataFrame do pandas
             dfs = []
             for table in all_tables:
                 df = pd.DataFrame(table[1:], columns=table[0])
                 dfs.append(df)
 
-            # Criar um arquivo Excel com as tabelas
-            pdf_filename = os.path.basename(pdf_path)  # Nome do arquivo PDF sem o caminho
-            pdf_filename_without_extension = os.path.splitext(pdf_filename)[0]  # Nome do arquivo sem a extensão
+            pdf_filename = os.path.basename(pdf_path) 
+            pdf_filename_without_extension = os.path.splitext(pdf_filename)[0]
             excel_path = os.path.join(excel_folder, f'{pdf_filename_without_extension}.xlsx')
             with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
                 for idx, df in enumerate(dfs):
@@ -163,10 +177,10 @@ def process_pdfs():
                 os.remove(pdf_path)
                 print(f'O arquivo {pdf_filename} foi excluído para evitar conflitos em outras operações.')
 
-        pdf_paths.clear()  # Limpar a lista de PDFs após processamento
+        pdf_paths.clear() 
         pdf_label.config(text="Nenhum PDF selecionado")
         
-        root.destroy()  # Fechar a janela após processamento
+        root.destroy()
 
     else:
         print("Selecione pelo menos um arquivo PDF e uma pasta de saída primeiro!")
@@ -190,12 +204,7 @@ process_button.pack()
 
 root.mainloop()
 
-
-import tkinter as tk
-from tkinter import filedialog
-import pandas as pd
-import os
-
+#O usuario seleciona a pasta de saida dos excel's da ultima parte do codigo e depois seleciona a pasta que deseja o unico arquivo excel
 def select_input_folder():
     global input_folder
     input_folder = filedialog.askdirectory()
@@ -219,29 +228,27 @@ def process_excel_files():
                     df_table_1 = pd.read_excel(file_path, sheet_name='Tabela_1')
                     df_table_3 = pd.read_excel(file_path, sheet_name='Tabela_3')
 
-                    # Combine os DataFrames das tabelas 1 e 3 em um único DataFrame
                     combined_df = pd.concat([df_table_1, df_table_3], ignore_index=True)
                     data_frames.append(combined_df)
                 except:
                     pass
 
-        # Combine todos os DataFrames em um único DataFrame
         if data_frames:
             final_df = pd.concat(data_frames, ignore_index=True)
 
-            output_file_path = os.path.join(output_folder, 'arquivo_juntado.xlsx')
+            output_file_path = os.path.join(output_folder, 'arquivo_completo.xlsx')
 
             with pd.ExcelWriter(output_file_path, engine='openpyxl') as writer:
                 final_df.to_excel(writer, index=False)
 
-            print(f"Arquivo juntado salvo em {output_file_path}")
+            print(f"Arquivo completo salvo em {output_file_path}")
 
             input_folder = ""
             output_folder = ""
             input_folder_label.config(text="Nenhuma pasta de entrada selecionada")
             output_folder_label.config(text="Nenhuma pasta de saída selecionada")
 
-            root.destroy()  # Fechar a janela após processamento
+            root.destroy()
     else:
         print("Selecione as pastas de entrada e saída primeiro!")
 
