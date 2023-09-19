@@ -9,16 +9,14 @@ import pandas as pd
 import os
 import pdfplumber
 
-#Lista de todos os estados que nao tem alteração
-estados = ['AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'PB', 'PE', 'RN', 'RJ', 'SC']
+estados = ['AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'PB', 'PE', 'RN', 'RJ', 'SC', 'MG', 'PI', 'PR']
 
-#Obtem o valor do mês que o usuário quer
 def obter_valor(valor_mes_entry, janela):
     valor_mes = int(valor_mes_entry.get())
     if 1 <= valor_mes <= 12:
         janela.quit()
 
-#Abre a janela do TKinter
+
 def escolher_valor():
     janela = tk.Tk()
     janela.title("Escolha um valor de 1 a 12")
@@ -44,99 +42,144 @@ def escolher_valor():
 #Define o valor do mês
 valor_mes = escolher_valor()
 print(f"O valor escolhido foi: {valor_mes}")
+root = tk.Tk()
+download_folder = filedialog.askdirectory(parent=root, initialdir="/",title ='Selecione a pasta')
 
-#Estado com alteração no sinduscon
-driver = webdriver.Chrome()
-url = f'http://www.cub.org.br/cub-m2-estadual/PR/'
-driver.get(url)
-try:
-    select_element = driver.find_element(By.ID, "mes")  
-    select = Select(select_element)
-    value_to_select = f"{valor_mes}" 
-    select.select_by_value(value_to_select)
-    
-    select_element = driver.find_element(By.ID, "sinduscon")  
-    select = Select(select_element)
-    select.select_by_value("18")
-    
-
-
-    button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
-    button.click()
-    
-    time.sleep(1)
-
-finally:
-        driver.quit()
-
-#Estado com alteração na seleção do mês e do sinduscon
-driver = webdriver.Chrome()
-url = f'http://www.cub.org.br/cub-m2-estadual/MG/'
-driver.get(url)
-try:
-    select_element = driver.find_element(By.ID, "mes")  
-    select = Select(select_element)
-    value_to_select = f"{valor_mes - 2}" 
-    select.select_by_value(value_to_select)
-    
-    select_element = driver.find_element(By.ID, "sinduscon")  
-    select = Select(select_element)
-    select.select_by_value("1")
-    
+for idx, estado in enumerate(estados):
+    if estado == "MG":
+        driver = webdriver.Chrome()
+        url = f'http://www.cub.org.br/cub-m2-estadual/{estado}/'
+        driver.get(url)
+        try:
+            select_element = driver.find_element(By.ID, "mes")  
+            select = Select(select_element)
+            value_to_select = f"{valor_mes - 2}" 
+            select.select_by_value(value_to_select)
+            
+            select_element = driver.find_element(By.ID, "sinduscon")  
+            select = Select(select_element)
+            select.select_by_value("1")
+            
 
 
-    button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
-    button.click()
-    
-    time.sleep(1)
+            button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
+            button.click()
+            
+            time.sleep(2)
+            
+            list_of_files = os.listdir(download_folder)
+            list_of_files.sort(key=lambda x: os.path.getctime(os.path.join(download_folder, x)))
+            newest_file = list_of_files[-1]
 
-finally:
-        driver.quit()
+            new_name = f'{estado}.pdf'
+            new_path = os.path.join(download_folder, new_name)
+            old_path = os.path.join(download_folder, newest_file)
+            os.rename(old_path, new_path)
 
-#Estado com alteração na escolha do mês
-driver = webdriver.Chrome()
-url = f'http://www.cub.org.br/cub-m2-estadual/PI/'
-driver.get(url)
-try:
-    select_element = driver.find_element(By.ID, "mes")  
-    select = Select(select_element)
-    
-    value_to_select = f"{valor_mes - 2}" 
-    select.select_by_value(value_to_select)
+            print(f'O arquivo PDF mais recente foi renomeado para {new_name}')
 
-    button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
-    button.click()
-    
-    time.sleep(1)
 
-finally:
-        driver.quit()
+        finally:
+                driver.quit()
+    elif estado == "PR":
+        driver = webdriver.Chrome()
+        url = f'http://www.cub.org.br/cub-m2-estadual/{estado}/'
+        driver.get(url)
+        try:
+            select_element = driver.find_element(By.ID, "mes")  
+            select = Select(select_element)
+            value_to_select = f"{valor_mes}" 
+            select.select_by_value(value_to_select)
+            
+            select_element = driver.find_element(By.ID, "sinduscon")  
+            select = Select(select_element)
+            select.select_by_value("18")
+            
 
-#Loop para o codigo fazer o download de cada estado sem alteração
-for estado in estados:
 
-    driver = webdriver.Chrome()
+            button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
+            button.click()
+            
+            time.sleep(2)
+            
+             # Encontre o arquivo PDF mais recente na pasta de download
+            list_of_files = os.listdir(download_folder)
+            list_of_files.sort(key=lambda x: os.path.getctime(os.path.join(download_folder, x)))
+            newest_file = list_of_files[-1]
 
-    url = f'http://www.cub.org.br/cub-m2-estadual/{estado}/'
-    driver.get(url)
+            # Renomeie o arquivo PDF com o nome do estado
+            new_name = f'{estado}.pdf'
+            new_path = os.path.join(download_folder, new_name)
+            old_path = os.path.join(download_folder, newest_file)
+            os.rename(old_path, new_path)
 
-    try:
-        select_element = driver.find_element(By.ID, "mes")  
-        select = Select(select_element)
+            print(f'O arquivo PDF mais recente foi renomeado para {new_name}')
 
-        value_to_select = f"{valor_mes}" 
-        select.select_by_value(value_to_select)
 
-        button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
-        button.click()
-        
-        time.sleep(1)
+        finally:
+                driver.quit()
+    elif estado == "PI":
+        driver = webdriver.Chrome()
+        url = f'http://www.cub.org.br/cub-m2-estadual/PI/'
+        driver.get(url)
+        try:
+            select_element = driver.find_element(By.ID, "mes")  
+            select = Select(select_element)
+            
+            value_to_select = f"{valor_mes - 2}" 
+            select.select_by_value(value_to_select)
 
-    
-    finally:
+            button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
+            button.click()
+            
+            time.sleep(2)
+            
+             # Encontre o arquivo PDF mais recente na pasta de download
+            list_of_files = os.listdir(download_folder)
+            list_of_files.sort(key=lambda x: os.path.getctime(os.path.join(download_folder, x)))
+            newest_file = list_of_files[-1]
+
+            # Renomeie o arquivo PDF com o nome do estado
+            new_name = f'{estado}.pdf'
+            new_path = os.path.join(download_folder, new_name)
+            old_path = os.path.join(download_folder, newest_file)
+            os.rename(old_path, new_path)
+
+            print(f'O arquivo PDF mais recente foi renomeado para {new_name}')
+
+
+        finally:
+                driver.quit()
+    else:
+        driver = webdriver.Chrome()
+        url = f'http://www.cub.org.br/cub-m2-estadual/{estado}/'
+        driver.get(url)
+
+        try:
+            select_element = driver.find_element(By.ID, "mes")  
+            select = Select(select_element)
+            value_to_select = f"{valor_mes}" 
+            select.select_by_value(value_to_select)
+
+            button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
+            button.click()
+            
+            time.sleep(2)
+
+            list_of_files = os.listdir(download_folder)
+            list_of_files.sort(key=lambda x: os.path.getctime(os.path.join(download_folder, x)))
+            newest_file = list_of_files[-1]
+
+            new_name = f'{estado}.pdf'
+            new_path = os.path.join(download_folder, new_name)
+            old_path = os.path.join(download_folder, newest_file)
+            os.rename(old_path, new_path)
+
+            print(f'O arquivo PDF mais recente foi renomeado para {new_name}')
+
+        finally:
             driver.quit()
-
-#O usuario seleciona os pdfs que ele deseja fazer o tratamento, e a pasta de saida
+            
 def select_output_folder():
     global excel_folder
     excel_folder = filedialog.askdirectory()
@@ -160,13 +203,15 @@ def process_pdfs():
                     all_tables.extend(tables)
 
             dfs = []
-            for table in all_tables:
-                df = pd.DataFrame(table[1:], columns=table[0])
+            pdf_filename = os.path.basename(pdf_path)  
+            pdf_filename_without_extension = os.path.splitext(pdf_filename)[0] 
+            for idx, table in enumerate(all_tables):
+                df = pd.DataFrame(table[1:], columns=table[0])           
+                df["Nome do Arquivo"] = pdf_filename_without_extension
                 dfs.append(df)
 
-            pdf_filename = os.path.basename(pdf_path) 
-            pdf_filename_without_extension = os.path.splitext(pdf_filename)[0]
-            excel_path = os.path.join(excel_folder, f'{pdf_filename_without_extension}.xlsx')
+            excel_filename_without_extension = os.path.splitext(pdf_filename)[0]
+            excel_path = os.path.join(excel_folder, f'{excel_filename_without_extension}.xlsx')
             with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
                 for idx, df in enumerate(dfs):
                     df.to_excel(writer, sheet_name=f'Tabela_{idx+1}', index=False)
@@ -184,6 +229,9 @@ def process_pdfs():
 
     else:
         print("Selecione pelo menos um arquivo PDF e uma pasta de saída primeiro!")
+
+
+
 
 root = tk.Tk()
 root.title("Processamento de PDFs")
