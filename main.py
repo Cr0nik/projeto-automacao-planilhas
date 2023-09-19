@@ -53,7 +53,12 @@ for idx, estado in enumerate(estados):
         try:
             select_element = driver.find_element(By.ID, "mes")  
             select = Select(select_element)
-            value_to_select = f"{valor_mes - 2}" 
+            if valor_mes == 1:
+                value_to_select = "11" 
+            elif valor_mes == 2:
+                value_to_select = "12"
+            else:
+                value_to_select = f"{valor_mes - 2}" 
             select.select_by_value(value_to_select)
             
             select_element = driver.find_element(By.ID, "sinduscon")  
@@ -124,9 +129,13 @@ for idx, estado in enumerate(estados):
         driver.get(url)
         try:
             select_element = driver.find_element(By.ID, "mes")  
-            select = Select(select_element)
-            
-            value_to_select = f"{valor_mes - 2}" 
+            select = Select(select_element)            
+            if valor_mes == 1:
+                value_to_select = "11" 
+            elif valor_mes == 2:
+                value_to_select = "12"
+            else:
+                value_to_select = f"{valor_mes - 2}" 
             select.select_by_value(value_to_select)
 
             button = driver.find_element(By.XPATH, f"//input[@value='Gerar Relatório em PDF']")
